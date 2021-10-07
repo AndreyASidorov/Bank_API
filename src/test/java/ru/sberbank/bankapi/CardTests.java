@@ -3,6 +3,7 @@ package ru.sberbank.bankapi;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,11 +52,8 @@ public class CardTests {
     public void testCreateNewCard() {
         AccountNumberDto accountNumberDto = new AccountNumberDto("0000000001");
         CardDto card = restTemplate.postForEntity("http://localhost:" + port + "/newCard", accountNumberDto, CardDto.class).getBody();
-        Assert.assertTrue(card.equals(CardDto.builder()
-                .id(3L)
-                .number("4276 1111 2222 3333")
-                .account(new AccountNumberDto(accountRepo.findByNumber(accountNumberDto.getNumber()).get().getNumber()))
-                .build()));
+        Assert.assertTrue(card.getNumber().equals("4276 1111 2222 3333")
+                && card.getAccount().getNumber().equals(accountNumberDto.getNumber()));
     }
 
     @Test

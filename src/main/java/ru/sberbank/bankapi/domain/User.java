@@ -9,11 +9,6 @@ import java.lang.ref.Reference;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-//@org.hibernate.annotations.NamedQueries({
-//        @org.hibernate.annotations.NamedQuery(name = "UserFindByUserName",
-//                query = "from User where userName = :username"),
-//        @org.hibernate.annotations.NamedQuery(name = "User_save",
-//                query = "Update User set userName = :username, password =: password where id = :id")})
 @Entity
 @Table(name = "user")
 public class User {
@@ -23,5 +18,7 @@ public class User {
     @Column(name = "user_name")
     private String userName;
     private String password;
+    @Version
+    private Long version;
 
 }

@@ -23,4 +23,6 @@ public class Card {
     @JoinColumn(name = "account", referencedColumnName = "id")
     private Account account;
     private String number;
+    @Version
+    private Long version;
 }

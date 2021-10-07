@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 class CardController {
 
-    CardService cardService;
+    private final CardService cardService;
 
     @Autowired
     public CardController(CardService cardService) {
