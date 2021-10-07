@@ -6,20 +6,24 @@ import ru.sberbank.bankapi.domain.Account;
 import ru.sberbank.bankapi.domain.Card;
 import ru.sberbank.bankapi.repo.AccountRepo;
 import ru.sberbank.bankapi.repo.CardRepo;
+import ru.sberbank.bankapi.util.impl.CommitUtil;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
 import java.util.List;
 
 @Repository
 public class CardRepoImpl implements CardRepo {
 
     private final EntityManager entityManager;
-    AccountRepo accountRepo;
+    private final AccountRepo accountRepo;
+    private final CommitUtil commitUtil;
 
     @Autowired
     public CardRepoImpl(EntityManagerFactory entityManagerFactory, AccountRepo accountRepo) {
         this.entityManager = entityManagerFactory.createEntityManager();
+        this.commitUtil = new CommitUtil(entityManager);
         this.accountRepo = accountRepo;
     }
 
@@ -30,9 +34,7 @@ public class CardRepoImpl implements CardRepo {
      */
     @Override
     public Card saveNewCard(Card card) {
-        entityManager.getTransaction().begin();
-        entityManager.persist(card);
-        entityManager.getTransaction().commit();
+        commitUtil.commit(() -> entityManager.persist(card));
         return card;
     }
 
@@ -43,12 +45,10 @@ public class CardRepoImpl implements CardRepo {
      */
     @Override
     public List<Card> getAllCardsByAccount(Account account) {
-        entityManager.getTransaction().begin();
-        List<Card> cards = entityManager.createNamedQuery(
+        Query query = entityManager.createNamedQuery(
                         "getAllCardsByAccount", Card.class)
-                .setParameter("account", account)
-                .getResultList();
-        entityManager.getTransaction().commit();
+                .setParameter("account", account);
+        List<Card> cards = query.getResultList();
         return cards;
     }
 
@@ -57,10 +57,10 @@ public class CardRepoImpl implements CardRepo {
      */
     @Override
     public void deleteAll() {
-        entityManager.getTransaction().begin();
-        entityManager.createNativeQuery("DELETE FROM CARD").executeUpdate();
-        entityManager.createNativeQuery("ALTER TABLE CARD ALTER COLUMN ID RESTART WITH 1").executeUpdate();
-        entityManager.getTransaction().commit();
         entityManager.clear();
+        commitUtil.commit(() -> {
+            entityManager.createNativeQuery("DELETE FROM card").executeUpdate();
+            entityManager.createNativeQuery("ALTER TABLE card ALTER COLUMN ID RESTART WITH 1").executeUpdate();
+        });
     }
 }

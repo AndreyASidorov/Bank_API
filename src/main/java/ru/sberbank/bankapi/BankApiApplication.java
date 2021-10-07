@@ -10,7 +10,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 @SpringBootApplication
-//@EnableConfigurationProperties
 public class BankApiApplication {
 
     public static void main(String[] args) {

@@ -9,6 +9,7 @@ import ru.sberbank.bankapi.exception.AccountWrongLengthException;
 import ru.sberbank.bankapi.exception.NotEnoughMoneyException;
 import ru.sberbank.bankapi.repo.AccountRepo;
 import ru.sberbank.bankapi.service.AccountService;
+import ru.sberbank.bankapi.util.impl.CommitUtil;
 
 import javax.persistence.EntityManager;
 import java.math.BigDecimal;
@@ -16,11 +17,13 @@ import java.math.BigDecimal;
 @Service
 public class AccountServiceImpl implements AccountService {
 
-    AccountRepo accountRepo;
+    private final AccountRepo accountRepo;
+    private final CommitUtil commitUtil;
 
     @Autowired
     AccountServiceImpl(AccountRepo accountRepo) {
         this.accountRepo = accountRepo;
+        this.commitUtil = new CommitUtil(accountRepo.getEntityManager());
     }
 
     /**
@@ -33,20 +36,25 @@ public class AccountServiceImpl implements AccountService {
         if (depositMoneyDto.getNumberAccount().length() != 10) {
             throw new AccountWrongLengthException();
         }
-        Account account = accountRepo
-                .findByNumber(depositMoneyDto.getNumberAccount())
-                .orElseThrow(AccountDoesNotExistsException::new);
-        if (depositMoneyDto
-                .getMoney()
-                .add(account.getBalance())
-                .compareTo(BigDecimal.ZERO) < 0) {
-            throw new NotEnoughMoneyException();
-        }
-        account.setBalance(account
-                .getBalance()
-                .add(depositMoneyDto.getMoney()));
-        accountRepo.setMoneyToAccount(account);
-        return account.getBalance();
+
+        DepositMoneyDto depositMoneyDtoResult = new DepositMoneyDto();
+        commitUtil.commit(() -> {
+            Account account = accountRepo
+                    .findByNumber(depositMoneyDto.getNumberAccount())
+                    .orElseThrow(AccountDoesNotExistsException::new);
+            if (depositMoneyDto
+                    .getMoney()
+                    .add(account.getBalance())
+                    .compareTo(BigDecimal.ZERO) < 0) {
+                throw new NotEnoughMoneyException();
+            }
+            account.setBalance(account
+                    .getBalance()
+                    .add(depositMoneyDto.getMoney()));
+            accountRepo.setMoneyToAccount(account);
+            depositMoneyDtoResult.setMoney(account.getBalance());
+        });
+        return depositMoneyDtoResult.getMoney();
     }
 
     /**

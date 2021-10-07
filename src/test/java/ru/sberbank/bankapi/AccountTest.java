@@ -14,6 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import ru.sberbank.bankapi.domain.Account;
 import ru.sberbank.bankapi.dto.DepositMoneyDto;
 import ru.sberbank.bankapi.repo.AccountRepo;
+import ru.sberbank.bankapi.util.impl.CommitUtil;
 
 import java.math.BigDecimal;
 
@@ -34,7 +35,8 @@ public class AccountTest {
     public void beforeEach() {
         Account account = accountRepo.findByNumber("0000000001").get();
         account.setBalance(BigDecimal.valueOf(1111.11));
-        accountRepo.setMoneyToAccount(account);
+        CommitUtil commitUtil = new CommitUtil(accountRepo.getEntityManager());
+        commitUtil.commit(() -> accountRepo.setMoneyToAccount(account));
     }
 
     @Test
@@ -49,7 +51,6 @@ public class AccountTest {
     @Test
     public void testNegativeDepositMoneyToAccountByCloud() {
         DepositMoneyDto depositMoneyDto = new DepositMoneyDto("0000000001", BigDecimal.valueOf(-11111.11));
-        //RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("http://localhost:" + port + "/depositMoney",depositMoneyDto,String.class);
         Assert.assertTrue(responseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         Assert.assertTrue(responseEntity.getBody().equals("Not enough money"));

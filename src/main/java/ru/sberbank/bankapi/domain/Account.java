@@ -28,4 +28,6 @@ public class Account {
     private User user;
     private String number;
     private BigDecimal balance;
+    @Version
+    private Long version;
 }

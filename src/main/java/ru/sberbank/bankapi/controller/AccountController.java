@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @RestController
 public class AccountController {
 
-    AccountService accountService;
+    private final AccountService accountService;
 
     @Autowired
     public AccountController(AccountService accountService) {
